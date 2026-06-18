@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEE KANGHYUN | TREND RADAR</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Noto+Sans+KR:wght@400;700&display=swap');
+
+        :root {
+            --neon-blue: #00f0ff;
+            --cobalt: #0047AB;
+            --bg-black: #020305;
+            --card-bg: rgba(10, 15, 25, 0.85);
+            --neon-pink: #ff007f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: var(--bg-black);
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 1. 배경 세계지도 & 비행 애니메이션 */
+        .world-map-bg {
+            position: absolute;
+            width: 110%;
+            height: 110%;
+            z-index: 1;
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .route-line {
+            fill: none;
+            stroke: var(--neon-blue);
+            stroke-width: 1.5;
+            stroke-dasharray: 5, 5;
+            opacity: 0.5;
+        }
+
+        .map-outline {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 1;
+        }
+
+        .mini-plane {
+            fill: var(--neon-blue);
+            filter: drop-shadow(0 0 5px var(--neon-blue));
+        }
+
+        /* 2. 인트로: 세련된 제트기 날아가는 효과 */
+        .intro-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-black);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeOut 0.5s ease 2.5s forwards;
+        }
+
+        .jet-svg {
+            width: 80px;
+            fill: var(--neon-blue);
+            filter: drop-shadow(0 0 15px var(--neon-blue));
+            position: absolute;
+            left: -10%;
+            animation: jetFly 2s cubic-bezier(0.2, 1, 0.2, 1) forwards;
+        }
+
+        @keyframes jetFly {
+            0% { left: -10%; transform: scale(0.8); }
+            100% { left: 110%; transform: scale(1); }
+        }
+
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* 3. 보딩패스 메인 카드 (고밀도) */
+        .boarding-pass {
+            width: 900px;
+            z-index: 10;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 15px;
+            display: flex;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease 2.8s forwards;
+        }
+
+        @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+
+        /* 패스 왼쪽 메인 영역 */
+        .pass-left {
+            flex: 2;
+            padding: 30px;
+            border-right: 2px dashed rgba(0, 240, 255, 0.2);
+        }
+
+        .pass-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .label-group { font-family: 'Montserrat', sans-serif; }
+        .label { color: var(--neon-blue); font-size: 10px; letter-spacing: 2px; text-transform: uppercase; }
+        .value { font-size: 22px; font-weight: 900; }
+
+        .tag-container {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 8px 15px;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            border-radius: 5px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .tag:hover, .tag.active {
+            background: var(--cobalt);
+            border-color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+
+        .detail-box {
+            height: 80px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 14px;
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(5px); } }
+
+        /* 패스 오른쪽 스텁(Stub) 영역 */
+        .pass-stub {
+            flex: 0.8;
+            padding: 30px;
+            background: rgba(0, 240, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .barcode-area {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .barcode {
+            width: 100%;
+            height: 60px;
+            background: repeating-linear-gradient(90deg, 
+                var(--neon-blue), var(--neon-blue) 2px, 
+                transparent 2px, transparent 4px,
+                var(--neon-blue) 4px, var(--neon-blue) 5px,
+                transparent 5px, transparent 8px);
+            opacity: 0.7;
+        }
+
+        .barcode-num { font-family: 'Montserrat', sans-serif; font-size: 10px; letter-spacing: 3px; margin-top: 5px; color: var(--neon-blue); }
+
+        .gate-info {
+            border-top: 1px solid rgba(0, 240, 255, 0.2);
+            padding-top: 15px;
+        }
+
+        .flap-wrap {
+            display: flex;
+            gap: 2px;
+            margin-top: 5px;
+        }
+
+        .flap {
+            width: 24px; height: 34px; background: #000; border-radius: 3px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Montserrat', sans-serif; font-weight: 900; color: var(--neon-blue);
+            border: 1px solid #111;
+        }
+
+    </style>
+</head>
+<body>
+
+    <svg class="world-map-bg" viewBox="0 0 1000 500">
+        <path class="map-outline" d="M150,150 Q200,100 300,120 T500,130 T700,150 T850,200 L900,350 Q800,450 600,400 T300,350 T100,250 Z" />
+        
+        <g id="routes">
+            <path id="route1" class="route-line" d="M750,180 Q850,130 920,200" /> <path id="route2" class="route-line" d="M750,180 Q600,100 450,150" /> <path id="route3" class="route-line" d="M750,180 Q500,120 380,180" /> <path id="route4" class="route-line" d="M750,180 Q800,300 850,400" /> <path id="route5" class="route-line" d="M750,180 Q900,100 950,140" /> </g>
+
+        <g class="mini-plane">
+            <circle r="3"><animateMotion dur="8s" repeatCount="indefinite" path="M750,180 Q850,130 920,200" /></circle>
+        </g>
+        <g class="mini-plane">
+            <circle r="3"><animateMotion dur="10s" repeatCount="indefinite" path="M750,180 Q600,100 450,150" /></circle>
+        </g>
+        <g class="mini-plane">
+            <circle r="3"><animateMotion dur="12s" repeatCount="indefinite" path="M750,180 Q500,120 380,180" /></circle>
+        </g>
+        <g class="mini-plane">
+            <circle r="3"><animateMotion dur="9s" repeatCount="indefinite" path="M750,180 Q800,300 850,400" /></circle>
+        </g>
+        <g class="mini-plane">
+            <circle r="3"><animateMotion dur="11s" repeatCount="indefinite" path="M750,180 Q900,100 950,140" /></circle>
+        </g>
+
+        <circle cx="750" cy="180" r="5" fill="var(--neon-pink)" /> </svg>
+
+    <div class="intro-screen">
+        <svg class="jet-svg" viewBox="0 0 24 24">
+            <path d="M21,16V14L13,9V3.5A1.5,1.5 0 0,0 11.5,2A1.5,1.5 0 0,0 10,3.5V9L2,14V16L10,13.5V19L8,20.5V22L11.5,21L15,22V20.5L13,19V13.5L21,16Z" transform="rotate(90 12 12)"/>
+        </svg>
+    </div>
+
+    <div class="boarding-pass">
+        <div class="pass-left">
+            <div class="pass-header">
+                <div class="label-group">
+                    <p class="label">Passenger Name</p>
+                    <p class="value">LEE KANG HYUN</p>
+                </div>
+                <div class="label-group" style="text-align: right;">
+                    <p class="label">Flight Mission</p>
+                    <p class="value" style="color: var(--neon-blue);">TREND SENSING</p>
+                </div>
+            </div>
+
+            <p class="label">Objective</p>
+            <p style="font-weight: 700; font-size: 18px; margin: 5px 0 20px;">
+                "트렌드를 빠르게 포착하여, 유효한 시장 전략을 설계합니다."
+            </p>
+
+            <p class="label">Taste & Lifestyle (Click to Dig)</p>
+            <div class="tag-container">
+                <div class="tag" onclick="showDetail('music')">🎧 음악 감상</div>
+                <div class="tag" onclick="showDetail('travel')">✈️ 공간 여행</div>
+                <div class="tag" onclick="showDetail('archive')">📊 데이터 아카이빙</div>
+                <div class="tag" onclick="showDetail('popup')">💡 팝업 탐방</div>
+            </div>
+
+            <div id="detailBox" class="detail-box"></div>
+        </div>
+
+        <div class="pass-stub">
+            <div class="label-group">
+                <p class="label">Boarding Gate</p>
+                <div class="flap-wrap">
+                    <div class="flap">L</div><div class="flap">E</div><div class="flap">E</div>
+                </div>
+            </div>
+
+            <div class="gate-info">
+                <p class="label">Core Strength</p>
+                <p style="font-size: 14px; font-weight: 700; margin-top: 5px;">Trend Capture & Execution</p>
+            </div>
+
+            <div class="barcode-area">
+                <div class="barcode"></div>
+                <p class="barcode-num">LKH-2026-TREND-RADAR</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const details = {
+            music: "단순한 감상을 넘어 틱톡, 스포티파이 알고리즘과 오디오 브랜딩 기법에 주목합니다.",
+            travel: "낯선 도시에 안착할 때 마주하는 로컬 브랜드와 공간 기획을 분석하여 경험을 축적합니다.",
+            archive: "일상 속 고효율 카피라이팅과 광고 UI를 아카이빙하여 즉시 기획 소스로 활용합니다.",
+            popup: "팝업 스토어 현장의 동선 설계와 굿즈 소비 유도 방식을 역추적하여 CX를 연구합니다."
+        };
+
+        function showDetail(type) {
+            const box = document.getElementById('detailBox');
+            const tags = document.querySelectorAll('.tag');
+            
+            // 태그 활성화 표시
+            tags.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 텍스트 출력
+            box.innerText = details[type];
+            box.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
